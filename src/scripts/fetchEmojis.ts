@@ -15,6 +15,12 @@ interface emoji {
     }
 }
 
+interface EmojiData {
+  symbol: string;
+  name?: string,
+  keywords?: string[]
+}
+
 const fetchEmojis = async () => {
 
     const cldrDirectory = path.resolve(path.join(rootDirectory, 'cldr'))
@@ -42,21 +48,27 @@ const fetchEmojis = async () => {
         if (result.ldml && result.ldml.annotations) {
             const emojis = result.ldml.annotations[0].annotation
 
-            const data: any = {emojis: []}
+            const data: {emojis: EmojiData[]} = {emojis: []}
 
             for (let i = 0; i < emojis.length; i++) {
                 const emoji: emoji = emojis[i]
 
-                const keywords = emoji._.split('|').map(e => e.trim())
                 const symbol = emoji.$.cp
                 const type = emoji.$.type
 
-                if (type !== 'tts') {
-                    // console.log(keywords, symbol)
-                    data.emojis.push({
-                        symbol,
-                        keywords
-                    })
+                const emojiData: EmojiData = {symbol}
+
+                if (type === 'tts') {
+                  emojiData.name = emoji._.trim()
+                } else {
+                  emojiData.keywords = emoji._.split('|').map(e => e.trim())
+                }
+                
+                const existingEmojiIndex = data.emojis.findIndex(e => e.symbol === symbol)
+                if (existingEmojiIndex >= 0) {
+                  data.emojis[existingEmojiIndex] = {...data.emojis[existingEmojiIndex], ...emojiData}
+                } else {
+                  data.emojis.push(emojiData)
                 }
             }
 

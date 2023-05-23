@@ -7,7 +7,7 @@ var xml2js_1 = require("xml2js");
 var app_root_path_1 = tslib_1.__importDefault(require("app-root-path"));
 var rootDirectory = app_root_path_1.default.path;
 var fetchEmojis = function () { return tslib_1.__awaiter(void 0, void 0, void 0, function () {
-    var cldrDirectory, cldrEmojisDirectory, distEmojisDirectory, files, i, file, fileExtension, fileName, fullFilePath, xml, result, emojis, data, i_1, emoji, keywords, symbol, type;
+    var cldrDirectory, cldrEmojisDirectory, distEmojisDirectory, files, i, file, fileExtension, fileName, fullFilePath, xml, result, emojis, data, _loop_1, i_1;
     return tslib_1.__generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -38,17 +38,27 @@ var fetchEmojis = function () { return tslib_1.__awaiter(void 0, void 0, void 0,
                 if (!(result.ldml && result.ldml.annotations)) return [3, 7];
                 emojis = result.ldml.annotations[0].annotation;
                 data = { emojis: [] };
-                for (i_1 = 0; i_1 < emojis.length; i_1++) {
-                    emoji = emojis[i_1];
-                    keywords = emoji._.split('|').map(function (e) { return e.trim(); });
-                    symbol = emoji.$.cp;
-                    type = emoji.$.type;
-                    if (type !== 'tts') {
-                        data.emojis.push({
-                            symbol: symbol,
-                            keywords: keywords
-                        });
+                _loop_1 = function (i_1) {
+                    var emoji = emojis[i_1];
+                    var symbol = emoji.$.cp;
+                    var type = emoji.$.type;
+                    var emojiData = { symbol: symbol };
+                    if (type === 'tts') {
+                        emojiData.name = emoji._.trim();
                     }
+                    else {
+                        emojiData.keywords = emoji._.split('|').map(function (e) { return e.trim(); });
+                    }
+                    var existingEmojiIndex = data.emojis.findIndex(function (e) { return e.symbol === symbol; });
+                    if (existingEmojiIndex >= 0) {
+                        data.emojis[existingEmojiIndex] = tslib_1.__assign(tslib_1.__assign({}, data.emojis[existingEmojiIndex]), emojiData);
+                    }
+                    else {
+                        data.emojis.push(emojiData);
+                    }
+                };
+                for (i_1 = 0; i_1 < emojis.length; i_1++) {
+                    _loop_1(i_1);
                 }
                 return [4, fs_extra_1.default.writeFileSync(path_1.default.join(distEmojisDirectory, fileName + ".json"), JSON.stringify(data), 'utf8')];
             case 6:
